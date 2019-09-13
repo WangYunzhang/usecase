@@ -19,7 +19,7 @@
 -
 Datasync + linux NFS serve实现大批量数据迁移和同步
 File gateway + lsyncd实现迁移过程中的实时同步
-[Image: image.png]
+[image](./image.png)
 
 PoC情况：
 -
