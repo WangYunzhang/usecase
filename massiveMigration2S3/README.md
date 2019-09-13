@@ -1,6 +1,6 @@
-海量文件大规模实时迁移/同步到S3
+# 海量文件大规模实时迁移/同步到S3
 
-背景：
+## 背景：
 -
 
 很多WEB站点需要处理大量的图片内容，为了适应多屏的场景，往往需要对图片尺寸和质量做适应的处理，因此，特别是在电子商务应用，图片处理服务是一个非常通用的场景。
@@ -15,20 +15,13 @@
 
 
 
-建议方案：
+## 建议方案：
 -
-Datasync + linux NFS serve实现大批量数据迁移和同步
-File gateway + lsyncd实现迁移过程中的实时同步
-[image](./image.png)
+Datasync + linux NFS serve实现大批量数据迁移和同步,File gateway + lsyncd实现A/B测试阶段单个文件的实时同步
+![image](./image.png)
 
-PoC情况：
--
-从PoC结果来看，通过M5.4xlarge的agent可以提供240MB／s的迁移速度，500GB的测试数据，Datasync支持增量同步、filter过滤、文件verification、自定义带宽等功能可以非常方便的满足EBS和S3实时数据同步的要求。
-
-客户倾向于s3fs替换file gw，主要从成本考虑
-
-主要步骤：
--
+### 主要步骤：
+--
 
 * 创建datasync task同步源文件系统到s3目标通
 * 在开始割接前再次运行datasync task进行增量同步（增加verification选项）
@@ -38,8 +31,16 @@ PoC情况：
 * 完全切换到s3
 * 停止lsyncd同步
 
+## PoC情况：
+
+从PoC结果来看，通过M5.4xlarge的agent可以提供240MB／s的迁移速度，500GB的测试数据，Datasync支持增量同步、filter过滤、文件verification、自定义带宽等功能可以非常方便的满足EBS和S3实时数据同步的要求。
+
+客户倾向于s3fs替换file gw，主要从成本考虑
 
 
-展望：
--
+
+
+
+## 展望：
+
 Datasync在迁移速度，简单易用等方面的表现让人因客户印象深刻。除了在线迁移的场景，后续可以进一步扩展客户在DR方面的需求，Datasync非常适合做本地文件系统在S3或者EFS上做同步和备份。
