@@ -9,7 +9,7 @@ Calico是针对容器、虚拟机和基于主机工作负载的开源网络和�
 
 但是在AWS VPC环境下不像物理数据中心那样有路由器可以和容器主机建立对等连接。本文主要针对这个场景进行讨论。实例场景如下图所示：
 构建一个三节点的集群，1个master节点，2个worker节点，目标是实现集群内部的pod和本VPC内的instanceA以及跨VPC的instanceB互通。
-![architecture](./image.png)
+![architecture](./architecture.png)
 
 ## 利用kops创建K8S集群
 
@@ -29,41 +29,38 @@ kops create cluster \
 --yes
 ```
 创建成功之后的输出类似下图：
- 
+![kopsrun](./kopsrun.png)
 
 ## 集群内部连接：
 kops在AWS环境里自动创建了一个VPC1（CIDR为172.20.0.0/16），在2个AZ分别创建了一个子网（172.20.32.0/19、172.20.64.0/19）,相应地在2个子网创建了K8S集群。
 然后，另外在VPC1内部新建子网172.20.96.0/19，在子网内部创建K8S集群外的instanceA，在VPC2子网subnet3内部创建instanceB，集群内成员和实例外实例instanceA的配置如下：
 
-角色	      IP	          Subnet	      AZ	      VPC
-Master	172.20.50.133  172.20.32.0/19	us-west-2a	VPC1
-Worker	172.20.46.87	 172.20.32.0/19	us-west-2a	VPC1
-Worker	172.20.68.184	 172.20.64.0/19	us-west-2b	VPC1
-外部实例  172.20.96.124	 172.20.96.0/19	us-west-2b  VPC1
+![table](./table.png)
+
 
 在集群内启动示例pod：
- 
+![runpod](./runpod.png)
 
 kops默认使用100.96.0.0/11作为pod的地址范围，四个pod分布在worker1（172.20.46.87）和woker2（172.20.68.184）上，calico在worker节点之间建立了full mesh的BGP对等连接，因此集群内部pod之间、pod和集群内的实例之间是连通的。
 
 worker2内部内部路由表如下：
- 
+![rt-worker2](./rt-worker2.png)
 
 在woker2内可以访问woker1内的pod：
- 
+![worker2-woker1](./work2-worker1.png)
 同样，通过在woker1内部也可以访问worker2内的pod：
- 
+![worker1-woker2](./work1-worker2.png) 
 
 
 ## 同VPC内集群外部和集群内部互通
 现在我们登录到instanceA，来访问pod，很显自然由于实例没有到pod地址空间的路由，无法访问pod：
- 
+![frominstanceA](./frominstanceA.png)
 
 这个时候我们可以修改instanceA所在子网的路由，增加到每个worker的pod的地址段的路由，target分别指向对应的worker节点实例：
- 
+![instanceA-rt](./instanceA-rt.png)
 关闭instanceA和worker节点的“源/目标地址检查”。
 这个时候就可以从instanceA访问worker1和worker2内的pod：
-
+![instanceA-worker1-woker2](./instanceA-worker1-worker2.png)
  
 
 
@@ -76,23 +73,23 @@ worker2内部内部路由表如下：
 
 AWS Transit Gateway（TGW）能够将 VPC及其本地网络连接到单个网关，能够跨多个帐户和 Amazon VPC 扩展网络，在本用例中，我们可以通过TGW来转发pod的路由，具体设置方法如下：
 1.创建TGW
- 
+![create-tgw](./create-tgw.png)
 2.将VPC1和VPC2分别attach到TGW
- 
+![attachevpc](./attachevpc.png)
 
 3.修改TGW的路由表，增加pod网段的路由，指向VPC1:
- 
+![tgw-rt](./tgw-rt.png)
 4.修改instanceB所在子网路由，增加pod网段的路由条目，target指向TGW：
- 
+![instanceB-rt](./instanceB-rt.png)
 
 5.修改K8S worker节点所在子网的路由，添加到instanceB子网的回指路由，以及到pod网段的路由：
- 
+![worker-rt](./worker-rt.png)
 
 6.修改worker节点实例的安全组，允许instanceB访问相应的端口：
- 
+![worker-sg](./worker-sg.png) 
 
 7.从instanceB访问pod：
- 
+![instanceB-pod](./instanceB-pod.png)
 
 至此，我们完成了跨VPC inbound访问pod设置。
 
