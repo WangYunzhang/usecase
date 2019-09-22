@@ -2,6 +2,7 @@
 
 Calico是针对容器、虚拟机和基于主机工作负载的开源网络和网络安全解决方案。 Calico支持广泛的平台，包括Kubernetes，OpenShift，Docker EE，OpenStack和裸机服务。当和K8S集成时，Calico创造了为容器创造一个路由网络，使得Pod之间通讯就像正常IP连接一样，它不使用overlay，而是用纯三层的方法，使用虚拟路由器通过BGP协议传播路由到其他集群内节点和数据中心的其他部分。
 关于Calico的具体原理和组件详见https://docs.projectcalico.org/，本文重点讨论AWS VPC环境下，K8S集群外部网络访问集群内Pod的方式。当然通过K8S服务IP也是一种inboud的访问方式。本文重点探讨另外一种通过路由来实现连通的方式，官方推荐的BGP Peering的方式：
+
  ![BGP](./BGP.png)
 
 在数据中心网络环境下，单个worker node上运行的虚拟路由器和数据中心的路由器建立BGP邻居关系，外部网络访问集群通过该路由器到达Calico endpoint。
@@ -89,6 +90,7 @@ AWS Transit Gateway（TGW）能够将 VPC及其本地网络连接到单个网关
 ![worker-sg](./worker-sg.png) 
 
 7.从instanceB访问pod：
+
 ![instanceB-pod](./instanceB-pod.png)
 
 至此，我们完成了跨VPC inbound访问pod设置。
@@ -98,11 +100,11 @@ AWS Transit Gateway（TGW）能够将 VPC及其本地网络连接到单个网关
 不管是在从同VPC还是跨VPC的外部访问K8S集群内部pod，都需要增加子网的路由，增加路由的条目和worker节点个数相同，目前单个路由表的最大路由条数为50，虽然可以提升至最大1000，但是可能会影响网络性能，因此在实际生产环境中，需要进行相应的测试。如果是同一个子网的实例访问pod，也可以通过在实例内部操作系统层面增加路由的方式，避免撑大子网路由表。
 
 ## 参考资料：
-Calico：https://docs.projectcalico.org/v3.8/introduction/
-calico外部连通性：https://docs.projectcalico.org/v3.6/networking/external-connectivity
-kops on aws：https://github.com/kubernetes/kops/blob/master/docs/aws.md
-利用kops进行Kubernetes网络设置：https://github.com/kubernetes/kops/blob/master/docs/networking.md#calico-example-for-cni-and-network-policy
-AWS Transit Gateway文档：https://docs.aws.amazon.com/vpc/latest/tgw/what-is-transit-gateway.html
+* Calico：https://docs.projectcalico.org/v3.8/introduction/
+* calico外部连通性：https://docs.projectcalico.org/v3.6/networking/external-connectivity
+* kops on aws：https://github.com/kubernetes/kops/blob/master/docs/aws.md
+* 利用kops进行Kubernetes网络设置：https://github.com/kubernetes/kops/blob/master/docs/networking.md#calico-example-for-cni-and-network-policy
+* AWS Transit Gateway文档：https://docs.aws.amazon.com/vpc/latest/tgw/what-is-transit-gateway.html
 
 
 
