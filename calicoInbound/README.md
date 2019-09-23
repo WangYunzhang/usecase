@@ -24,10 +24,10 @@ export KOPS_STATE_STORE=<s3://your-bucket-for-kops>
 export ZONES=${ZONES:-"us-west-2a,us-west-2b"}
 
 kops create cluster \
-  --zones $ZONES\
+  --zones $ZONES \
   --networking calico \
   ${NAME}
---yes
+  --yes
 ```
 创建成功之后的输出类似下图：
 ![kopsrun](./kopsrun.png)
