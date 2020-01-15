@@ -48,9 +48,9 @@ worker2内部内部路由表如下：
 ![rt-worker2](./rt-worker2.png)
 
 在woker2内可以访问woker1内的pod：
-![worker2-woker1](./work2-worker1.png)
+![worker2-worker1](./worker2-worker1.png)
 同样，通过在woker1内部也可以访问worker2内的pod：
-![worker1-woker2](./work1-worker2.png) 
+![worker1-worker2](./worker1-worker2.png) 
 
 
 ## 同VPC内集群外部和集群内部互通
@@ -70,7 +70,7 @@ worker2内部内部路由表如下：
 
 ## 利用Transit Gateway实现跨VPC访问pod
 
-首先我们在vpc2内部创建instanceB（172.31.35.55），实例所在子网没有办法直接添加到pod的路由，应为VPC subnet的路由表里无法添加跨VPC的target，因此无法像上一步在同一个VPC里那样直接增加subnet路由来实现intanceB和pod的连通。
+首先我们在vpc2内部创建instanceB（172.31.35.55），实例所在子网没有办法直接添加到pod的路由，因为VPC subnet的路由表里无法添加跨VPC的target，因此无法像上一步在同一个VPC里那样直接增加subnet路由来实现intanceB和pod的连通。
 
 AWS Transit Gateway（TGW）能够将 VPC及其本地网络连接到单个网关，能够跨多个帐户和 Amazon VPC 扩展网络，在本用例中，我们可以通过TGW来转发pod的路由，具体设置方法如下：
 1.创建TGW
