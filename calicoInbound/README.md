@@ -49,6 +49,7 @@ worker2内部内部路由表如下：
 
 在woker2内可以访问woker1内的pod：
 ![worker2-worker1](./worker2-worker1.png)
+
 同样，通过在woker1内部也可以访问worker2内的pod：
 ![worker1-worker2](./worker1-worker2.png) 
 
